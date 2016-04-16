@@ -46,24 +46,21 @@ struct VulkanTexture
 //==============================================================================
 // グローバル変数
 //==============================================================================
-VkInstance									g_VulkanInstance						= nullptr;								// Vulkanのインスタンス
-VkSurfaceKHR								g_VulkanSurface							= nullptr;								// Vulkanのサーフェス情報
-VkPhysicalDevice							g_VulkanPhysicalDevice					= nullptr;								// 物理デバイス(GPUデバイス)オブジェクト
-VkPhysicalDeviceProperties					g_VulkanPhysicalDeviceProperties		= {};									// 物理デバイス(GPUデバイス)のプロパティ
-VkPhysicalDeviceMemoryProperties			g_VulkanPhysicalDeviceMemoryProperties	= {};									// 物理デバイス(GPUデバイス)のメモリプロパティ
-VkDevice									g_VulkanDevice							= nullptr;								// Vulkanデバイス
-VkQueue										g_VulkanQueue							= nullptr;								// グラフィックスキュー
-VkSemaphore									g_VulkanSemahoreRenderComplete			= nullptr;								// コマンドバッファ実行用セマフォ
-VkPipelineStageFlags						g_VulkanPipelineStageFlags				= VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;	// パイプラインステージフラグ
-VkCommandPool								g_VulkanCommandPool						= nullptr;								// コマンドプールオブジェクト
-uint32_t									g_queueNodeIndex						= 0;									// キューのインデックス
-VkFence										g_VulkanFence							= nullptr;								// フェンスオブジェクト
-std::vector<VkCommandBuffer>				g_commandBuffers						= {};									// コマンドバッファ配列(スワップチェーン数に依存)
-uint32_t									g_currentBufferIndex					= 0;									// 現在のバッファインデックス
-VkSwapchainKHR								g_VulkanSwapChain						= nullptr;								// スワップチェーンオブジェクト
-std::vector<VulkanTexture>					g_backBuffers							= {};									// バックバッファ情報
-VulkanTexture								g_depthTexture;																	// 深度テクスチャ
-std::vector<VkFramebuffer>					g_frameBuffers							= {};									// フレームバッファ配列
+VkInstance									g_VulkanInstance				= nullptr;	// Vulkanのインスタンス
+VkSurfaceKHR								g_VulkanSurface					= nullptr;	// Vulkanのサーフェス情報
+std::vector<VulkanGPU>						g_GPUs							= {};		// GPU情報
+VulkanGPU									g_currentGPU;								// 現在選択しているGPU情報
+VkDevice									g_VulkanDevice					= nullptr;	// Vulkanデバイス
+VkQueue										g_VulkanQueue					= nullptr;	// グラフィックスキュー
+VkSemaphore									g_VulkanSemahoreRenderComplete	= nullptr;	// コマンドバッファ実行用セマフォ
+VkCommandPool								g_VulkanCommandPool				= nullptr;	// コマンドプールオブジェクト
+VkFence										g_VulkanFence					= nullptr;	// フェンスオブジェクト
+std::vector<VkCommandBuffer>				g_commandBuffers				= {};		// コマンドバッファ配列(スワップチェーン数に依存)
+uint32_t									g_currentBufferIndex			= 0;		// 現在のバッファインデックス
+VkSwapchainKHR								g_VulkanSwapChain				= nullptr;	// スワップチェーンオブジェクト
+std::vector<VulkanTexture>					g_backBuffersTextures			= {};		// バックバッファ情報
+VulkanTexture								g_depthBufferTexture;						// 深度テクスチャ
+std::vector<VkFramebuffer>					g_frameBuffers					= {};		// フレームバッファ配列
 
 //==============================================================================
 // Vulkanエラーチェック用関数
@@ -167,23 +164,30 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 	result = vkEnumeratePhysicalDevices(g_VulkanInstance, &gpuCount, physicalDevices.data());
 	checkVulkanError(result, TEXT("物理デバイスの列挙に失敗しました"));
 
+	// すべてのGPU情報を格納
+	g_GPUs.resize(gpuCount);
+	for(uint32_t i = 0; i < gpuCount; ++i)
+	{
+		g_GPUs[i].device = physicalDevices[i];
+
+		// 物理デバイスのプロパティ獲得
+		vkGetPhysicalDeviceProperties(g_GPUs[i].device, &g_GPUs[i].deviceProperties);
+
+		// 物理デバイスのメモリプロパティ獲得
+		vkGetPhysicalDeviceMemoryProperties(g_GPUs[i].device, &g_GPUs[i].deviceMemoryProperties);
+	}
+
 	// ※このサンプルでは最初に列挙されたGPUデバイスを使用する
-	g_VulkanPhysicalDevice = physicalDevices[0];
-
-	// 物理デバイスのプロパティ獲得
-	vkGetPhysicalDeviceProperties(g_VulkanPhysicalDevice, &g_VulkanPhysicalDeviceProperties);
-
-	// 物理デバイスのメモリプロパティ獲得
-	vkGetPhysicalDeviceMemoryProperties(g_VulkanPhysicalDevice, &g_VulkanPhysicalDeviceMemoryProperties);
+	g_currentGPU = g_GPUs[0];
 
 	// グラフィックス操作をサポートするキューを検索
 	uint32_t queueCount;
-	vkGetPhysicalDeviceQueueFamilyProperties(g_VulkanPhysicalDevice, &queueCount, nullptr);
+	vkGetPhysicalDeviceQueueFamilyProperties(g_currentGPU.device, &queueCount, nullptr);
 	assert(queueCount >= 1 && TEXT("物理デバイスキューの検索失敗"));
 
 	std::vector<VkQueueFamilyProperties> queueProps;
 	queueProps.resize(queueCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(g_VulkanPhysicalDevice, &queueCount, queueProps.data());
+	vkGetPhysicalDeviceQueueFamilyProperties(g_currentGPU.device, &queueCount, queueProps.data());
 
 	uint32_t graphicsQueueIndex = 0;
 	for(graphicsQueueIndex = 0; graphicsQueueIndex < queueCount; ++graphicsQueueIndex)
@@ -220,7 +224,7 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 		deviceCreateInfo.ppEnabledExtensionNames = enabledExtensions.data();
 	}
 
-	result = vkCreateDevice(g_VulkanPhysicalDevice, &deviceCreateInfo, nullptr, &g_VulkanDevice);
+	result = vkCreateDevice(g_currentGPU.device, &deviceCreateInfo, nullptr, &g_VulkanDevice);
 	checkVulkanError(result, TEXT("Vulkanデバイス作成失敗"));
 
 	// グラフィックスキュー獲得
@@ -253,7 +257,7 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 	//==================================================
 	VkCommandPoolCreateInfo cmdPoolInfo = {};
 	cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	cmdPoolInfo.queueFamilyIndex = g_queueNodeIndex;
+	cmdPoolInfo.queueFamilyIndex = 0;
 	cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 	result = vkCreateCommandPool(g_VulkanDevice, &cmdPoolInfo, nullptr, &g_VulkanCommandPool);
 	checkVulkanError(result, TEXT("コマンドプール作成失敗"));
@@ -290,9 +294,6 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 	commandBufferBeginInfo.flags = 0;
 	commandBufferBeginInfo.pInheritanceInfo = &commandBufferInheritanceInfo;
 
-	result = vkBeginCommandBuffer(g_commandBuffers[g_currentBufferIndex], &commandBufferBeginInfo);
-	checkVulkanError(result, TEXT("コマンドバッファ記録開始に作成失敗"));
-
 	//==================================================
 	// OS(今回はWin32)用のサーフェスを作成する
 	//==================================================
@@ -310,12 +311,12 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 	VkColorSpaceKHR imageColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
 
 	uint32_t surfaceFormatCount = 0;
-	result = vkGetPhysicalDeviceSurfaceFormatsKHR(g_VulkanPhysicalDevice, g_VulkanSurface, &surfaceFormatCount, nullptr);
+	result = vkGetPhysicalDeviceSurfaceFormatsKHR(g_currentGPU.device, g_VulkanSurface, &surfaceFormatCount, nullptr);
 	checkVulkanError(result, TEXT("サポートしているカラーフォーマット数の獲得失敗"));
 
 	std::vector<VkSurfaceFormatKHR> surfaceFormats;
 	surfaceFormats.resize(surfaceFormatCount);
-	result = vkGetPhysicalDeviceSurfaceFormatsKHR(g_VulkanPhysicalDevice, g_VulkanSurface, &surfaceFormatCount, surfaceFormats.data());
+	result = vkGetPhysicalDeviceSurfaceFormatsKHR(g_currentGPU.device, g_VulkanSurface, &surfaceFormatCount, surfaceFormats.data());
 	checkVulkanError(result, TEXT("サポートしているカラーフォーマットの獲得失敗"));
 
 	// 一致するカラーフォーマットを検索する
@@ -340,7 +341,7 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 	VkSurfaceCapabilitiesKHR surfaceCapabilities;
 	VkSurfaceTransformFlagBitsKHR surfaceTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
 	result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-		g_VulkanPhysicalDevice,
+		g_currentGPU.device,
 		g_VulkanSurface,
 		&surfaceCapabilities);
 	checkVulkanError(result, TEXT("サーフェスの機能の獲得失敗"));
@@ -354,7 +355,7 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
 	uint32_t presentModeCount;
 	result = vkGetPhysicalDeviceSurfacePresentModesKHR(
-		g_VulkanPhysicalDevice,
+		g_currentGPU.device,
 		g_VulkanSurface,
 		&presentModeCount,
 		nullptr);
@@ -363,7 +364,7 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 	std::vector<VkPresentModeKHR> presentModes;
 	presentModes.resize(presentModeCount);
 	result = vkGetPhysicalDeviceSurfacePresentModesKHR(
-		g_VulkanPhysicalDevice,
+		g_currentGPU.device,
 		g_VulkanSurface,
 		&presentModeCount,
 		presentModes.data());
@@ -421,7 +422,7 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 	result = vkGetSwapchainImagesKHR(g_VulkanDevice, g_VulkanSwapChain, &swapChainCount, nullptr);
 	checkVulkanError(result, TEXT("スワップチェーンイメージ数の獲得失敗"));
 
-	g_backBuffers.resize(swapChainCount);
+	g_backBuffersTextures.resize(swapChainCount);
 
 	std::vector<VkImage> images;
 	images.resize(swapChainCount);
@@ -430,7 +431,7 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 
 	for(uint32_t i = 0; i < swapChainCount; ++i)
 	{
-		g_backBuffers[i].image = images[i];
+		g_backBuffersTextures[i].image = images[i];
 	}
 
 	images.clear();
@@ -438,7 +439,7 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 	//==================================================
 	// イメージビューの生成
 	//==================================================
-	for(auto& backBuffer : g_backBuffers)
+	for(auto& backBuffer : g_backBuffersTextures)
 	{
 		VkImageViewCreateInfo imageViewCreateInfo = {};
 		imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -472,7 +473,7 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 
 	VkImageTiling imageTiling;
 	VkFormatProperties formatProperties;
-	vkGetPhysicalDeviceFormatProperties(g_VulkanPhysicalDevice, depthFormat, &formatProperties);
+	vkGetPhysicalDeviceFormatProperties(g_currentGPU.device, depthFormat, &formatProperties);
 
 	if(formatProperties.linearTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
 	{
@@ -507,18 +508,18 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 	imageCreateInfo.pQueueFamilyIndices = nullptr;
 	imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-	result = vkCreateImage(g_VulkanDevice, &imageCreateInfo, nullptr, &g_depthTexture.image);
+	result = vkCreateImage(g_VulkanDevice, &imageCreateInfo, nullptr, &g_depthBufferTexture.image);
 	checkVulkanError(result, TEXT("深度テクスチャ用イメージビュー作成失敗"));
 
 	// メモリ要件を獲得
 	VkMemoryRequirements memoryRequirements;
-	vkGetImageMemoryRequirements(g_VulkanDevice, g_depthTexture.image, &memoryRequirements);
+	vkGetImageMemoryRequirements(g_VulkanDevice, g_depthBufferTexture.image, &memoryRequirements);
 
 	VkFlags requirementsMask = 0;
 	uint32_t typeBits = memoryRequirements.memoryTypeBits;
 	uint32_t typeIndex = 0;
 
-	for(const auto& memoryType : g_VulkanPhysicalDeviceMemoryProperties.memoryTypes)
+	for(const auto& memoryType : g_currentGPU.deviceMemoryProperties.memoryTypes)
 	{
 		if((typeBits & 0x1) == 1)
 		{
@@ -538,16 +539,16 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 	allocInfo.allocationSize = memoryRequirements.size;
 	allocInfo.memoryTypeIndex = typeIndex;
 
-	result = vkAllocateMemory(g_VulkanDevice, &allocInfo, nullptr, &g_depthTexture.memory);
+	result = vkAllocateMemory(g_VulkanDevice, &allocInfo, nullptr, &g_depthBufferTexture.memory);
 	checkVulkanError(result, TEXT("深度テクスチャ用メモリ確保失敗"));
 
-	result = vkBindImageMemory(g_VulkanDevice, g_depthTexture.image, g_depthTexture.memory, 0);
+	result = vkBindImageMemory(g_VulkanDevice, g_depthBufferTexture.image, g_depthBufferTexture.memory, 0);
 	checkVulkanError(result, TEXT("深度テクスチャメモリにバインド失敗"));
 
 	VkImageViewCreateInfo imageViewCreateInfo = {};
 	imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	imageViewCreateInfo.pNext = nullptr;
-	imageViewCreateInfo.image = g_depthTexture.image;
+	imageViewCreateInfo.image = g_depthBufferTexture.image;
 	imageViewCreateInfo.format = depthFormat;
 	imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_R;
 	imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_G;
@@ -561,13 +562,13 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 	imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 	imageViewCreateInfo.flags = 0;
 
-	result = vkCreateImageView(g_VulkanDevice, &imageViewCreateInfo, nullptr, &g_depthTexture.view);
+	result = vkCreateImageView(g_VulkanDevice, &imageViewCreateInfo, nullptr, &g_depthBufferTexture.view);
 	checkVulkanError(result, TEXT("深度テクスチャイメージビュー作成失敗"));
 
 	setImageLayout(
 		g_VulkanDevice,
 		g_commandBuffers[g_currentBufferIndex],
-		g_depthTexture.image,
+		g_depthBufferTexture.image,
 		VK_IMAGE_ASPECT_DEPTH_BIT,
 		VK_IMAGE_LAYOUT_UNDEFINED,
 		VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
@@ -591,8 +592,8 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 	g_frameBuffers.resize(SWAP_CHAIN_COUNT);
 	for(uint32_t i = 0; i < SWAP_CHAIN_COUNT; ++i)
 	{
-		attachments[0] = g_backBuffers[i].view;
-		attachments[1] = g_depthTexture.view;
+		attachments[0] = g_backBuffersTextures[i].view;
+		attachments[1] = g_depthBufferTexture.view;
 		auto result = vkCreateFramebuffer(g_VulkanDevice, &frameBufferCreateInfo, nullptr, &g_frameBuffers[i]);
 		checkVulkanError(result, TEXT("フレームバッファ作成失敗"));
 	}
@@ -600,9 +601,6 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 	//==================================================
 	// コマンドを実行
 	//==================================================
-	result = vkEndCommandBuffer(g_commandBuffers[g_currentBufferIndex]);
-	checkVulkanError(result, TEXT("コマンド記録終了に失敗"));
-
 	VkPipelineStageFlags pipeStageFlags = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
 
 	VkSubmitInfo submitInfo = {};
@@ -647,19 +645,19 @@ void destroyVulkan()
 		vkDestroyFramebuffer(g_VulkanDevice, frameBuffer, nullptr);
 	}
 
-	if(g_depthTexture.view)
+	if(g_depthBufferTexture.view)
 	{
-		vkDestroyImageView(g_VulkanDevice, g_depthTexture.view, nullptr);
+		vkDestroyImageView(g_VulkanDevice, g_depthBufferTexture.view, nullptr);
 	}
 
-	if(g_depthTexture.image)
+	if(g_depthBufferTexture.image)
 	{
-		vkDestroyImage(g_VulkanDevice, g_depthTexture.image, nullptr);
+		vkDestroyImage(g_VulkanDevice, g_depthBufferTexture.image, nullptr);
 	}
 
-	if(g_depthTexture.memory)
+	if(g_depthBufferTexture.memory)
 	{
-		vkFreeMemory(g_VulkanDevice, g_depthTexture.memory, nullptr);
+		vkFreeMemory(g_VulkanDevice, g_depthBufferTexture.memory, nullptr);
 	}
 
 	if(g_commandBuffers.empty() == false)
@@ -721,7 +719,7 @@ void destroyVulkan()
 void Render()
 {
 	VkResult result;
-	auto command = g_commandBuffers[g_currentBufferIndex];
+	VkCommandBuffer command = g_commandBuffers[g_currentBufferIndex];
 
 	//==================================================
 	// コマンド記録開始
@@ -765,7 +763,7 @@ void Render()
 
 	vkCmdClearColorImage(
 		command,
-		g_backBuffers[g_currentBufferIndex].image,
+		g_backBuffersTextures[g_currentBufferIndex].image,
 		VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 		&clearColor,
 		1,
@@ -786,7 +784,7 @@ void Render()
 
 	vkCmdClearDepthStencilImage(
 		command,
-		g_depthTexture.image,
+		g_depthBufferTexture.image,
 		VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
 		&clearDepthStencil,
 		1,
@@ -809,7 +807,7 @@ void Render()
 	imageMemoryBarrier.subresourceRange.levelCount = 1;
 	imageMemoryBarrier.subresourceRange.baseArrayLayer = 0;
 	imageMemoryBarrier.subresourceRange.layerCount = 1;
-	imageMemoryBarrier.image = g_backBuffers[g_currentBufferIndex].image;
+	imageMemoryBarrier.image = g_backBuffersTextures[g_currentBufferIndex].image;
 
 	vkCmdPipelineBarrier(
 		command,

@@ -278,22 +278,6 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 	result = vkAllocateCommandBuffers(g_VulkanDevice, &commandBufferAllocateInfo, g_commandBuffers.data());
 	checkVulkanError(result, TEXT("コマンドバッファ作成失敗"));
 
-	VkCommandBufferInheritanceInfo commandBufferInheritanceInfo = {};
-	commandBufferInheritanceInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-	commandBufferInheritanceInfo.pNext = nullptr;
-	commandBufferInheritanceInfo.renderPass = VK_NULL_HANDLE;
-	commandBufferInheritanceInfo.subpass = 0;
-	commandBufferInheritanceInfo.framebuffer = VK_NULL_HANDLE;
-	commandBufferInheritanceInfo.occlusionQueryEnable = VK_FALSE;
-	commandBufferInheritanceInfo.queryFlags = 0;
-	commandBufferInheritanceInfo.pipelineStatistics = 0;
-
-	VkCommandBufferBeginInfo commandBufferBeginInfo = {};
-	commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	commandBufferBeginInfo.pNext = nullptr;
-	commandBufferBeginInfo.flags = 0;
-	commandBufferBeginInfo.pInheritanceInfo = &commandBufferInheritanceInfo;
-
 	//==================================================
 	// OS(今回はWin32)用のサーフェスを作成する
 	//==================================================

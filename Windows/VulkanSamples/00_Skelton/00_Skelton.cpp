@@ -582,40 +582,6 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 		checkVulkanError(result, TEXT("フレームバッファ作成失敗"));
 	}
 
-	//==================================================
-	// コマンドを実行
-	//==================================================
-	VkPipelineStageFlags pipeStageFlags = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-
-	VkSubmitInfo submitInfo = {};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submitInfo.pNext = nullptr;
-	submitInfo.waitSemaphoreCount = 0;
-	submitInfo.pWaitSemaphores = nullptr;
-	submitInfo.pWaitDstStageMask = &pipeStageFlags;
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &g_commandBuffers[g_currentBufferIndex];
-	submitInfo.signalSemaphoreCount = 0;
-	submitInfo.pSignalSemaphores = nullptr;
-
-	result = vkQueueSubmit(g_VulkanQueue, 1, &submitInfo, VK_NULL_HANDLE);
-	checkVulkanError(result, TEXT("グラフィックキューのサブミットに失敗"));
-
-	result = vkQueueWaitIdle(g_VulkanQueue);
-	checkVulkanError(result, TEXT("グラフィックキューのアイドル待ちに失敗"));
-
-	//==================================================
-	// フレームを用意
-	//==================================================
-	result = vkAcquireNextImageKHR(
-		g_VulkanDevice,
-		g_VulkanSwapChain,
-		UINT64_MAX,
-		g_VulkanSemahoreRenderComplete,
-		nullptr,
-		&g_currentBufferIndex);
-	checkVulkanError(result, TEXT("次の有効なイメージインデックスの獲得に失敗"));
-
 	return true;
 }
 

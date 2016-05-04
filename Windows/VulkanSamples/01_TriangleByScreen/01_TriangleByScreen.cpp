@@ -258,10 +258,18 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 	applicationInfo.pEngineName = APPLICATION_NAME;
 	applicationInfo.apiVersion = VK_API_VERSION;
 
+	std::vector<LPCSTR> enabledExtensionsByInstance = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
+
 	VkInstanceCreateInfo instanceCreateInfo = {};
 	instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	instanceCreateInfo.pNext = nullptr;
 	instanceCreateInfo.pApplicationInfo = &applicationInfo;
+
+	if(enabledExtensionsByInstance.empty() == false)
+	{
+		instanceCreateInfo.enabledExtensionCount = enabledExtensionsByInstance.size();
+		instanceCreateInfo.ppEnabledExtensionNames = enabledExtensionsByInstance.data();
+	}
 
 	result = vkCreateInstance(&instanceCreateInfo, nullptr, &g_VulkanInstance);
 	checkVulkanError(result, TEXT("Vulkanインスタンス作成失敗"));
@@ -324,7 +332,7 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 	queueCreateInfo.queueCount = 1;
 	queueCreateInfo.pQueuePriorities = &queuePrioritie;
 
-	std::vector<LPCSTR> enabledExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+	std::vector<LPCSTR> enabledExtensionsByDevice = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 	VkDeviceCreateInfo deviceCreateInfo = {};
 	deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -333,10 +341,10 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 	deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
 	deviceCreateInfo.pEnabledFeatures = nullptr;
 
-	if(enabledExtensions.size() > 0)
+	if(enabledExtensionsByDevice.empty() == false)
 	{
-		deviceCreateInfo.enabledExtensionCount = enabledExtensions.size();
-		deviceCreateInfo.ppEnabledExtensionNames = enabledExtensions.data();
+		deviceCreateInfo.enabledExtensionCount = enabledExtensionsByDevice.size();
+		deviceCreateInfo.ppEnabledExtensionNames = enabledExtensionsByDevice.data();
 	}
 
 	result = vkCreateDevice(g_currentGPU.device, &deviceCreateInfo, nullptr, &g_VulkanDevice);

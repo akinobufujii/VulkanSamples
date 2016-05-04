@@ -1437,7 +1437,7 @@ void Render()
 	submitInfo.pWaitSemaphores = nullptr;
 	submitInfo.pWaitDstStageMask = &pipeStageFlags;
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &g_commandBuffers[g_currentBufferIndex];
+	submitInfo.pCommandBuffers = &command;
 	submitInfo.signalSemaphoreCount = 0;
 	submitInfo.pSignalSemaphores = nullptr;
 

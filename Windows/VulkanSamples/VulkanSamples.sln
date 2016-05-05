@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "00_Skelton", "00_Skelton\00
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "01_TriangleByScreen", "01_TriangleByScreen\01_TriangleByScreen.vcxproj", "{B4114846-E28B-482D-8E16-8C97157FCB54}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "02_TriangleByWorld", "02_TriangleByWorld\02_TriangleByWorld.vcxproj", "{26B1015A-43DA-402E-B053-842759EEAB47}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,10 @@ Global
 		{B4114846-E28B-482D-8E16-8C97157FCB54}.Debug|x64.Build.0 = Debug|x64
 		{B4114846-E28B-482D-8E16-8C97157FCB54}.Release|x64.ActiveCfg = Release|x64
 		{B4114846-E28B-482D-8E16-8C97157FCB54}.Release|x64.Build.0 = Release|x64
+		{26B1015A-43DA-402E-B053-842759EEAB47}.Debug|x64.ActiveCfg = Debug|x64
+		{26B1015A-43DA-402E-B053-842759EEAB47}.Debug|x64.Build.0 = Debug|x64
+		{26B1015A-43DA-402E-B053-842759EEAB47}.Release|x64.ActiveCfg = Release|x64
+		{26B1015A-43DA-402E-B053-842759EEAB47}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

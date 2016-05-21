@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "02_TriangleByWorld", "02_Tr
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "03_DrawMeshNoTexture", "03_DrawMeshNoTexture\03_DrawMeshNoTexture.vcxproj", "{A6CB9DEE-6BAB-4237-9278-E5398C5702D2}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "04_DrawMeshUseTexture", "04_DrawMeshUseTexture\04_DrawMeshUseTexture.vcxproj", "{7D9153CC-F1F9-4E1B-97FD-D28E86A68B02}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -33,6 +35,10 @@ Global
 		{A6CB9DEE-6BAB-4237-9278-E5398C5702D2}.Debug|x64.Build.0 = Debug|x64
 		{A6CB9DEE-6BAB-4237-9278-E5398C5702D2}.Release|x64.ActiveCfg = Release|x64
 		{A6CB9DEE-6BAB-4237-9278-E5398C5702D2}.Release|x64.Build.0 = Release|x64
+		{7D9153CC-F1F9-4E1B-97FD-D28E86A68B02}.Debug|x64.ActiveCfg = Debug|x64
+		{7D9153CC-F1F9-4E1B-97FD-D28E86A68B02}.Debug|x64.Build.0 = Debug|x64
+		{7D9153CC-F1F9-4E1B-97FD-D28E86A68B02}.Release|x64.ActiveCfg = Release|x64
+		{7D9153CC-F1F9-4E1B-97FD-D28E86A68B02}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

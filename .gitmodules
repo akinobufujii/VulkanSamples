@@ -1,0 +1,3 @@
+[submodule "Windows/VulkanSamples/external/stb"]
+	path = Windows/VulkanSamples/external/stb
+	url = https://github.com/nothings/stb.git

@@ -944,7 +944,7 @@ void destroyVulkan()
 bool createResource()
 {
 	VkResult result;
-	void* data;
+	void* pData;
 
 	VkMemoryAllocateInfo memoryAlloc = {};
 	memoryAlloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -1003,11 +1003,11 @@ bool createResource()
 	checkVulkanError(result, TEXT("ステージング用頂点バッファメモリ確保に失敗"));
 
 	// メモリマッピング
-	result = vkMapMemory(g_VulkanDevice, stagingBuffers.vertices.memory, 0, memoryAlloc.allocationSize, 0, &data);
+	result = vkMapMemory(g_VulkanDevice, stagingBuffers.vertices.memory, 0, memoryAlloc.allocationSize, 0, &pData);
 	checkVulkanError(result, TEXT("ステージング用頂点バッファメモリマッピングに失敗"));
 
 	// 内容をコピー
-	memcpy(data, vertexBuffer.data(), vertexBufferSize);
+	memcpy(pData, vertexBuffer.data(), vertexBufferSize);
 
 	// メモリアンマップしてバッファをバインドする
 	vkUnmapMemory(g_VulkanDevice, stagingBuffers.vertices.memory);
@@ -1061,11 +1061,11 @@ bool createResource()
 	checkVulkanError(result, TEXT("ステージング用インデックスバッファメモリ確保に失敗"));
 
 	// メモリマッピング
-	result = vkMapMemory(g_VulkanDevice, stagingBuffers.indices.memory, 0, indexBufferSize, 0, &data);
+	result = vkMapMemory(g_VulkanDevice, stagingBuffers.indices.memory, 0, indexBufferSize, 0, &pData);
 	checkVulkanError(result, TEXT("ステージング用インデックスバッファメモリマッピングに失敗"));
 
 	// 内容をコピー
-	memcpy(data, indexBuffer.data(), indexBufferSize);
+	memcpy(pData, indexBuffer.data(), indexBufferSize);
 
 	// メモリアンマップしてバッファをバインドする
 	vkUnmapMemory(g_VulkanDevice, stagingBuffers.indices.memory);
@@ -1185,6 +1185,7 @@ bool createResource()
 	//==================================================
 	// テクスチャ読み込み(テクスチャは一つとして仮定する)
 	//==================================================
+	VkFormat format = VK_FORMAT_R8G8B8A8_UNORM;
 
 	// 画像データを読み込み
 	int width;
@@ -1195,7 +1196,7 @@ bool createResource()
 
 	// 要求されたテクスチャフォーマットに対してのプロパティを獲得する
 	VkFormatProperties formatProperties;
-	vkGetPhysicalDeviceFormatProperties(g_currentGPU.device, VK_FORMAT_R8G8B8A8_UINT, &formatProperties);
+	vkGetPhysicalDeviceFormatProperties(g_currentGPU.device, format, &formatProperties);
 
 	// テクスチャ作成用のコマンドバッファを作成
 	cmdBufInfo = {};
@@ -1235,7 +1236,7 @@ bool createResource()
 
 	VkMemoryAllocateInfo memoryAllocateInfo = {};
 	memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	memoryAllocateInfo.pNext = NULL;
+	memoryAllocateInfo.pNext = nullptr;
 	memoryAllocateInfo.allocationSize = 0;
 	memoryAllocateInfo.memoryTypeIndex = 0;
 	memoryAllocateInfo.allocationSize = memReqs.size;
@@ -1248,11 +1249,10 @@ bool createResource()
 	checkVulkanError(result, TEXT("テクスチャ作成用のステージングバッファのメモリバインディングに失敗"));
 
 	// テクスチャデータをステージングバッファコピー
-	uint8_t* pData;
 	result = vkMapMemory(g_VulkanDevice, stagingMemory, 0, memReqs.size, 0, reinterpret_cast<void**>(&pData));
 	checkVulkanError(result, TEXT("テクスチャ作成用のステージングバッファのメモリマッピングに失敗"));
 
-	memcpy(data, pPixelData, bufferCreateInfo.size);
+	memcpy(pData, pPixelData, bufferCreateInfo.size);
 	vkUnmapMemory(g_VulkanDevice, stagingMemory);
 
 	// バッファイメージの設定
@@ -1271,7 +1271,7 @@ bool createResource()
 	imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 	imageCreateInfo.pNext = nullptr;
 	imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
-	imageCreateInfo.format = VK_FORMAT_R8G8B8A8_UINT;
+	imageCreateInfo.format = format;
 	imageCreateInfo.mipLevels = 1;
 	imageCreateInfo.arrayLayers = 1;
 	imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -1389,7 +1389,7 @@ bool createResource()
 	view.pNext = nullptr;
 	view.image = VK_NULL_HANDLE;
 	view.viewType = VK_IMAGE_VIEW_TYPE_2D;
-	view.format = VK_FORMAT_R8G8B8A8_UINT;
+	view.format = format;
 	view.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
 	view.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
 	view.subresourceRange.levelCount = 1;

@@ -54,6 +54,9 @@ bool MeshImporter::loadMesh(const std::string& filename, float scale, bool isFli
 					pTexCoord = &ZERO_3D;
 				}
 
+				// TexcoordのV座標が逆転しているので逆転させる
+				pTexCoord->y = 1 - pTexCoord->y;
+
 				aiVector3D vertex = pMesh->mVertices[j] * scale;
 
 				// 上下をフリップさせる

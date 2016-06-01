@@ -75,6 +75,7 @@
     <ClCompile Include="MeshImporter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="FPSCounter.h" />
     <ClInclude Include="MeshImporter.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -21,6 +21,7 @@
 #include <stb_image.h>
 
 #include "MeshImporter.h"
+#include "FPSCounter.h"
 
 //==============================================================================
 // 定数
@@ -2043,8 +2044,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 	// ウィンドウ表示
 	ShowWindow(hwnd, nCmdShow);
 
+	FPSCounter fpsCounter; // FPSカウンター
+
 	// メッセージループ
 	do {
+		fpsCounter.beginCount();
+
 		if(PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
@@ -2055,6 +2060,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 			// メイン
 			Render();
 		}
+
+		fpsCounter.endCount();
+
+		std::string windowTitle = std::string(APPLICATION_NAME) + " - " + std::to_string(fpsCounter.getLastFPS()) + "FPS";
+		SetWindowText(hwnd, windowTitle.c_str());
+
 	} while(msg.message != WM_QUIT);
 
 	// リソース破棄

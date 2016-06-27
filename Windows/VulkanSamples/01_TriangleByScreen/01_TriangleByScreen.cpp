@@ -14,6 +14,10 @@
 #include <vulkan/vulkan.h>
 #include <vulkan/vk_sdk_platform.h>
 
+#include <string>
+
+#include "../utility/FPSCounter.h"
+
 //==============================================================================
 // 定数
 //==============================================================================
@@ -21,7 +25,7 @@ static const uint32_t SCREEN_WIDTH = 1280;					// 画面幅
 static const uint32_t SCREEN_HEIGHT = 720;					// 画面高さ
 static LPCTSTR	CLASS_NAME = TEXT("01_TriangleByScreen");	// ウィンドウネーム
 static LPCSTR APPLICATION_NAME = "01_TriangleByScreen";		// アプリケーション名
-static const UINT SWAP_CHAIN_COUNT = 2;						// スワップチェーン数
+static const UINT SWAP_CHAIN_COUNT = 3;						// スワップチェーン数
 static const UINT TIMEOUT_NANO_SEC = 100000000;				// コマンド実行のタイムアウト時間(ナノ秒)
 
 //==============================================================================
@@ -256,7 +260,7 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 	applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	applicationInfo.pApplicationName = APPLICATION_NAME;
 	applicationInfo.pEngineName = APPLICATION_NAME;
-	applicationInfo.apiVersion = VK_API_VERSION;
+	applicationInfo.apiVersion = VK_MAKE_VERSION(1, 0, 0);
 
 	std::vector<LPCSTR> enabledExtensionsByInstance = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
 
@@ -1576,8 +1580,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 	// ウィンドウ表示
 	ShowWindow(hwnd, nCmdShow);
 
+	FPSCounter fpsCounter; // FPSカウンター
+
 	// メッセージループ
 	do {
+		fpsCounter.beginCount();
+
 		if(PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
@@ -1588,6 +1596,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 			// メイン
 			Render();
 		}
+
+		fpsCounter.endCount();
+
+		std::string windowTitle = std::string(APPLICATION_NAME) + " - " + std::to_string(fpsCounter.getLastFPS()) + " FPS";
+		SetWindowText(hwnd, windowTitle.c_str());
+
 	} while(msg.message != WM_QUIT);
 
 	// リソース破棄

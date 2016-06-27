@@ -71,12 +71,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\utility\MeshImporter.cpp" />
     <ClCompile Include="04_DrawMeshUseTexture.cpp" />
-    <ClCompile Include="MeshImporter.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="FPSCounter.h" />
-    <ClInclude Include="MeshImporter.h" />
+    <ClInclude Include="..\utility\FPSCounter.h" />
+    <ClInclude Include="..\utility\MeshImporter.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

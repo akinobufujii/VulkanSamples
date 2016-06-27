@@ -1,6 +1,8 @@
 //==============================================================================
 // Assimpでのメッシュインポーター
 //==============================================================================
+#pragma once
+
 #include <vector>
 #include <string>
 #include <assimp/postprocess.h>
@@ -9,7 +11,6 @@
 #include <assimp/vector2.h>
 #include <assimp/vector3.h>
 
-#pragma once
 class MeshImporter
 {
 public:

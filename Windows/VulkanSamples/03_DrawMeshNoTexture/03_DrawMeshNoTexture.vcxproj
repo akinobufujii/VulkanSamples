@@ -77,11 +77,12 @@ copy /y $(SolutionDir)asset\BandouT.bmp $(ProjectDir)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\utility\MeshImporter.cpp" />
     <ClCompile Include="03_DrawMeshNoTexture.cpp" />
-    <ClCompile Include="MeshImporter.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MeshImporter.h" />
+    <ClInclude Include="..\utility\FPSCounter.h" />
+    <ClInclude Include="..\utility\MeshImporter.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

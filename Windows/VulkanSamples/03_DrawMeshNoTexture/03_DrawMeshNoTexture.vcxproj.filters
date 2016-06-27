@@ -13,18 +13,24 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Utility">
+      <UniqueIdentifier>{2e2ef344-d6dc-480d-9ac6-5256b16582aa}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="03_DrawMeshNoTexture.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="MeshImporter.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="..\utility\MeshImporter.cpp">
+      <Filter>Utility</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MeshImporter.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="..\utility\FPSCounter.h">
+      <Filter>Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\utility\MeshImporter.h">
+      <Filter>Utility</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

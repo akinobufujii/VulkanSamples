@@ -1195,10 +1195,6 @@ bool createResource()
 
 	stbi_uc* pPixelData = stbi_load(meshDatum.front().textureName.c_str(), &width, &height, &bpp, 4);
 
-	// 要求されたテクスチャフォーマットに対してのプロパティを獲得する
-	VkFormatProperties formatProperties;
-	vkGetPhysicalDeviceFormatProperties(g_currentGPU.device, format, &formatProperties);
-
 	// テクスチャ作成用のコマンドバッファを作成
 	cmdBufInfo = {};
 	cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -1398,10 +1394,10 @@ bool createResource()
 	result = vkCreateImageView(g_VulkanDevice, &view, nullptr, &g_meshTexture.view);
 	checkVulkanError(result, TEXT("イメージビューの作成に失敗"));
 
-	// コマンドバッファ開放
+	// コマンドバッファ解放
 	vkFreeCommandBuffers(g_VulkanDevice, g_VulkanCommandPool, 1, &textureCmdBuffer);
 
-	// ピクセルデータ開放
+	// ピクセルデータ解放
 	stbi_image_free(pPixelData);
 
 	//==================================================

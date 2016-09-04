@@ -659,7 +659,7 @@ bool initVulkan(HINSTANCE hinst, HWND wnd)
 	imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
 	result = vkCreateImage(g_VulkanDevice, &imageCreateInfo, nullptr, &g_depthBufferTexture.image);
-	checkVulkanError(result, TEXT("深度テクスチャ用イメージビュー作成失敗"));
+	checkVulkanError(result, TEXT("深度テクスチャ用イメージ作成失敗"));
 
 	// メモリ要件を獲得
 	VkMemoryRequirements memoryRequirements;

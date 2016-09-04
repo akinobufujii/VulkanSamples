@@ -970,7 +970,7 @@ bool createResource()
 	// メッシュデータ読み込み
 	//==================================================
 	MeshImporter meshImporter;
-	meshImporter.loadMesh("Bandouiruka0.3ds", 8, true);
+	meshImporter.loadMesh("Cerberus_LP.FBX", 0.015f, true);
 	const auto& meshDatum = meshImporter.getMeshDatum();
 
 	//==================================================
